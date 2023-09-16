@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <script type="module">
+      import Navbar from './components/NavbarLogin.js'
+      import Sidebar from './components/Sidebar.js'
+      import { html, render } from './js/standalone.module.js'
+
+      render(
+        html`
+          <${Navbar}
+            links=${[
+              {
+                '@id':
+                  'https://github.com/ursuscamp/nomen/blob/master/docs/SPEC.md',
+                label: 'Nomen'
+              },
+              {
+                '@id': 'https://nomenexplorer.com/explorer',
+                label: 'Explorer'
+              },
+              {
+                '@id': 'https://nomenexplorer.com/stats',
+                label: 'Stats'
+              },
+              {
+                '@id': 'https://nomenexplorer.com/api/name',
+                label: 'API'
+              }
+            ]}
+          />
+          <${Sidebar} />
+          <div style="margin-left: 215px; margin-top: 15px;">
+            <form style="">
+              <label for="nameInput">Name:</label>
+              <br />
+              <input
+                id="nameInput"
+                type="text"
+                placeholder="Enter your name here"
+              />
+              <br />
+              <label for="nameInput">Pubkey:</label>
+              <br />
+              <input
+                id="nameInput"
+                type="text"
+                placeholder="Enter your pubkey here"
+              />
+              <br />
+              <br />
+              <label for="nameInput">OP_RETURN</label>
+              <br />
+              <br />
+              NOM...
+            </form>
+          </div>
+        `,
+        document.body
+      )
+    </script>
+  </body>
+</html>
