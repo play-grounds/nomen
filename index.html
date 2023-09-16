@@ -5,7 +5,118 @@
     <script type="module">
       import Navbar from './components/NavbarLogin.js'
       import Sidebar from './components/Sidebar.js'
-      import { html, render } from './js/standalone.module.js'
+      import { html, render, Component } from './js/standalone.module.js'
+      import sha256 from 'https://cdn.skypack.dev/fast-sha256'
+      import ripemd160 from 'https://cdn.skypack.dev/ripemd160-min'
+
+      console.log('hello world')
+      console.log(new ripemd160().update('42').digest('hex'))
+
+      class App extends Component {
+        constructor(props) {
+          super(props)
+          this.state = {
+            name: '',
+            pubkey: '',
+            opReturn: 'NOM'
+          }
+          this.handleNameChange = this.handleNameChange.bind(this)
+          this.handlePubkeyChange = this.handlePubkeyChange.bind(this)
+          this.handleGetPubkeyFromExtension =
+            this.handleGetPubkeyFromExtension.bind(this)
+        }
+
+        async handleGetPubkeyFromExtension() {
+          try {
+            const pubkey = await window.nostr.getPublicKey()
+            this.setState({
+              pubkey: pubkey,
+              opReturn: 'NOM' + this.state.name + pubkey
+            })
+          } catch (error) {
+            console.error('Error retrieving pubkey:', error)
+          }
+        }
+
+        handleNameChange(event) {
+          const value = event.target.value
+          this.setState({
+            name: value,
+            opReturn: 'NOM' + this.state.name + this.state.pubkey
+          })
+        }
+
+        handlePubkeyChange(event) {
+          const value = event.target.value
+          this.setState({
+            pubkey: value,
+            opReturn: 'NOM' + this.state.name + value
+          })
+        }
+
+        render() {
+          // var name5 = await sha256(this.state.name)
+          // console.log(name5)
+
+          var hash5 = sha256(this.state.name)
+          hash5 = new ripemd160().update(hash5).digest('hex')
+          hash5 = hash5.slice(0, 5).toString('hex')
+
+          var hash20 = sha256(this.state.pubkey + this.state.name)
+          hash20 = new ripemd160().update(hash20).digest('hex')
+          hash20 = hash20.slice(0, 20).toString('hex')
+
+          return html`
+            <div style="margin-left: 215px; margin-top: 15px;">
+              <form style="">
+                <label for="nameInput">Name:</label>
+                <br />
+                <input
+                  id="nameInput"
+                  type="text"
+                  placeholder="Enter your name here"
+                  value="${this.state.name}"
+                  onKeyUp="${this.handleNameChange}"
+                />
+                <br />
+                <label for="pubkeyInput">Pubkey:</label>
+                <br />
+                <input
+                  id="pubkeyInput"
+                  type="text"
+                  placeholder="Enter your pubkey here"
+                  value="${this.state.pubkey}"
+                  onKeyUp="${this.handlePubkeyChange}"
+                />
+                <button
+                  type="button"
+                  onClick="${this.handleGetPubkeyFromExtension}"
+                >
+                  get from extension
+                </button>
+                <br />
+                <br />
+                <label for="opReturnOutput">OP_RETURN</label>
+                <br />
+                <br />
+                NOM
+                <br />
+                ${this.state.name}
+                <br />
+                ${this.state.pubkey}
+                <br />
+                5 chars : ripe160(sha256(name))
+                <br />
+                ${hash5}
+                <br />
+                20 chars : ripe160(sha256(pubkey + name))
+                <br />
+                ${hash20}
+              </form>
+            </div>
+          `
+        }
+      }
 
       render(
         html`
@@ -35,31 +146,8 @@
             ]}
           />
           <${Sidebar} />
-          <div style="margin-left: 215px; margin-top: 15px;">
-            <form style="">
-              <label for="nameInput">Name:</label>
-              <br />
-              <input
-                id="nameInput"
-                type="text"
-                placeholder="Enter your name here"
-              />
-              <br />
-              <label for="nameInput">Pubkey:</label>
-              <br />
-              <input
-                id="nameInput"
-                type="text"
-                placeholder="Enter your pubkey here"
-              />
-              <br />
-              <br />
-              <label for="nameInput">OP_RETURN</label>
-              <br />
-              <br />
-              NOM...
-            </form>
-          </div>
+
+          <${App} />
         `,
         document.body
       )
