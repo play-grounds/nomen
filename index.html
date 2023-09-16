@@ -27,8 +27,7 @@
           try {
             const pubkey = await window.nostr.getPublicKey()
             this.setState({
-              pubkey: pubkey,
-              opReturn: 'NOM' + this.state.name + pubkey
+              pubkey: pubkey
             })
           } catch (error) {
             console.error('Error retrieving pubkey:', error)
@@ -38,18 +37,22 @@
         async handleNameChange(event) {
           const value = event.target.value
           const h5 = await sha256(value)
+          const h20 = await sha256(value + this.state.pubkey)
           this.setState({
             name: value,
-            opReturn: 'NOM' + this.state.name + this.state.pubkey,
-            h5: h5
+            h5: h5,
+            h20: h20
           })
         }
 
         async handlePubkeyChange(event) {
           const value = event.target.value
+          const h5 = await sha256(this.state.name)
+          const h20 = await sha256(this.state.name + value)
           this.setState({
             pubkey: value,
-            opReturn: 'NOM' + this.state.name + value
+            h5: h5,
+            h20: h20
           })
         }
 
@@ -58,11 +61,22 @@
           // console.log(name5)
 
           var hash5 = this.state.h5
+          var hash20 = this.state.h20
 
           // console.log('sha2', hash5?.toString('hex'))
           if (!hash5) {
             hash5 = ''
           }
+          if (!hash20) {
+            hash20 = ''
+          }
+
+          function bytesToHex(byteArray) {
+            return Array.from(byteArray, function (byte) {
+              return ('0' + (byte & 0xff).toString(16)).slice(-2)
+            }).join('')
+          }
+
           function hexToBytes(hex) {
             let bytes = []
             for (let i = 0; i < hex.length; i += 2) {
@@ -72,12 +86,11 @@
           }
           hash5 = new ripemd160().update(hexToBytes(hash5)).digest('hex')
           // console.log(hash5)
-          hash5 = hash5.slice(0, 5).toString('hex')
+          var hash5display = hash5.slice(0, 5).toString('hex')
           // console.log(hash5)
 
-          var hash20 = sha256(this.state.pubkey + this.state.name)
           hash20 = new ripemd160().update(hexToBytes(hash20)).digest('hex')
-          hash20 = hash20.slice(0, 20).toString('hex')
+          var hash20display = hash20.slice(0, 20).toString('hex')
 
           return html`
             <div style="margin-left: 215px; margin-top: 15px;">
@@ -120,11 +133,17 @@
                 <br />
                 5 chars : ripe160(sha256(name))
                 <br />
-                ${hash5}
+                ${hash5display} (${bytesToHex(hash5).substring(0, 10)})
                 <br />
-                20 chars : ripe160(sha256(pubkey + name))
+                20 chars : ripe160(sha256(name + pubkey))
                 <br />
-                ${hash20}
+                ${hash20display} (${bytesToHex(hash20).substring(0, 40)})
+                <br />
+                <br />
+                <div style="color: green">
+                  4e4f4d0000 -${bytesToHex(hash5).substring(0, 10)} -
+                  ${bytesToHex(hash20).substring(0, 40)}
+                </div>
               </form>
             </div>
           `
