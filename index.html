@@ -6,11 +6,8 @@
       import Navbar from './components/NavbarLogin.js'
       import Sidebar from './components/Sidebar.js'
       import { html, render, Component } from './js/standalone.module.js'
-      import sha256 from 'https://cdn.skypack.dev/fast-sha256'
+      import sha256 from 'https://cdn.skypack.dev/sha256'
       import ripemd160 from 'https://cdn.skypack.dev/ripemd160-min'
-
-      console.log('hello world')
-      console.log(new ripemd160().update('42').digest('hex'))
 
       class App extends Component {
         constructor(props) {
@@ -38,15 +35,17 @@
           }
         }
 
-        handleNameChange(event) {
+        async handleNameChange(event) {
           const value = event.target.value
+          const h5 = await sha256(value)
           this.setState({
             name: value,
-            opReturn: 'NOM' + this.state.name + this.state.pubkey
+            opReturn: 'NOM' + this.state.name + this.state.pubkey,
+            h5: h5
           })
         }
 
-        handlePubkeyChange(event) {
+        async handlePubkeyChange(event) {
           const value = event.target.value
           this.setState({
             pubkey: value,
@@ -58,12 +57,26 @@
           // var name5 = await sha256(this.state.name)
           // console.log(name5)
 
-          var hash5 = sha256(this.state.name)
-          hash5 = new ripemd160().update(hash5).digest('hex')
+          var hash5 = this.state.h5
+
+          // console.log('sha2', hash5?.toString('hex'))
+          if (!hash5) {
+            hash5 = ''
+          }
+          function hexToBytes(hex) {
+            let bytes = []
+            for (let i = 0; i < hex.length; i += 2) {
+              bytes.push(parseInt(hex.substr(i, 2), 16))
+            }
+            return new Uint8Array(bytes)
+          }
+          hash5 = new ripemd160().update(hexToBytes(hash5)).digest('hex')
+          // console.log(hash5)
           hash5 = hash5.slice(0, 5).toString('hex')
+          // console.log(hash5)
 
           var hash20 = sha256(this.state.pubkey + this.state.name)
-          hash20 = new ripemd160().update(hash20).digest('hex')
+          hash20 = new ripemd160().update(hexToBytes(hash20)).digest('hex')
           hash20 = hash20.slice(0, 20).toString('hex')
 
           return html`
