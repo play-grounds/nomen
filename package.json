@@ -1,6 +1,6 @@
 {
   "name": "play-nomen",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "nomen",
   "main": "index.js",
   "scripts": {
