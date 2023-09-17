@@ -34,10 +34,42 @@
           }
         }
 
+        hexTo8BitChars(hex) {
+          let result = ''
+          for (let i = 0; i < hex.length; i += 2) {
+            let byte = hex.substring(i, i + 2)
+            let char = String.fromCharCode(parseInt(byte, 16))
+            result += char
+          }
+          return result
+        }
+
+        hexToUint8Array(hexString) {
+          if (hexString.length % 2 !== 0) {
+            throw new Error('Invalid hex string length')
+          }
+          const byteArray = new Uint8Array(hexString.length / 2)
+          for (let i = 0; i < hexString.length; i += 2) {
+            byteArray[i / 2] = parseInt(hexString.substr(i, 2), 16)
+          }
+          return byteArray
+        }
+
+        stringToUint8Array(str) {
+          const encoder = new TextEncoder()
+          return encoder.encode(str)
+        }
+
         async handleNameChange(event) {
           const value = event.target.value
           const h5 = await sha256(value)
-          const h20 = await sha256(value + this.state.pubkey)
+          const namespaceid = [
+            ...this.stringToUint8Array(value),
+            ...this.hexToUint8Array(this.state.pubkey)
+          ]
+          console.log('namespaceid', namespaceid)
+          const h20 = await sha256(namespaceid)
+          console.log('sha256 h20', h20)
           this.setState({
             name: value,
             h5: h5,
@@ -48,7 +80,13 @@
         async handlePubkeyChange(event) {
           const value = event.target.value
           const h5 = await sha256(this.state.name)
-          const h20 = await sha256(this.state.name + value)
+          const namespaceid = [
+            ...this.stringToUint8Array(this.state.name),
+            ...this.hexToUint8Array(value)
+          ]
+          console.log('namespaceid', namespaceid)
+          const h20 = await sha256(namespaceid)
+          console.log('sha256 h20', h20)
           this.setState({
             pubkey: value,
             h5: h5,
@@ -174,6 +212,10 @@
               {
                 '@id': 'https://nomenexplorer.com/api/name',
                 label: 'API'
+              },
+              {
+                '@id': 'https://github.com/play-grounds/nomen',
+                label: 'Source'
               }
             ]}
           />
