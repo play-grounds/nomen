@@ -26,9 +26,18 @@
         async handleGetPubkeyFromExtension() {
           try {
             const pubkey = await window.nostr.getPublicKey()
-            this.setState({
-              pubkey: pubkey
-            })
+            this.setState(
+              {
+                pubkey: pubkey
+              },
+              async () => {
+                // Add callback to execute after state update
+                await this.handleNameChange({
+                  target: { value: this.state.name }
+                })
+                await this.handlePubkeyChange({ target: { value: pubkey } })
+              }
+            )
           } catch (error) {
             console.error('Error retrieving pubkey:', error)
           }
